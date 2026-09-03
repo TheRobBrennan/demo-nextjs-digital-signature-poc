@@ -1,13 +1,13 @@
 import { createHash } from "node:crypto";
 
-import { linkAuditEvent } from "../audit";
-import { sha256 } from "../hash";
+import { linkAuditEvent } from "../audit.ts";
+import { sha256 } from "../hash.ts";
 import type {
   AuditEvent,
   DocumentRef,
   NewAuditEvent,
   SignatureRecord,
-} from "../model";
+} from "../model.ts";
 import type {
   AuditLog,
   Clock,
@@ -15,7 +15,7 @@ import type {
   IdGenerator,
   SignatureRepository,
   Signer,
-} from "../ports";
+} from "../ports.ts";
 
 /**
  * In-memory implementations of every port.
@@ -136,7 +136,10 @@ export class FakeSigner implements Signer {
 
   readonly #secret: string;
 
-  constructor(readonly keyId = "fake-key-1", secret = "test-secret") {
+  readonly keyId: string;
+
+  constructor(keyId = "fake-key-1", secret = "test-secret") {
+    this.keyId = keyId;
     this.#secret = secret;
   }
 
@@ -177,9 +180,13 @@ export class FixedClock implements Clock {
 export class SequentialIds implements IdGenerator {
   #n = 0;
 
-  constructor(private readonly prefix = "id") {}
+  readonly #prefix: string;
+
+  constructor(prefix = "id") {
+    this.#prefix = prefix;
+  }
 
   next(): string {
-    return `${this.prefix}_${++this.#n}`;
+    return `${this.#prefix}_${++this.#n}`;
   }
 }

@@ -112,22 +112,38 @@ takes the machine back to where it started.
 `make` is the source of truth - prefer it over raw `docker compose` or `pnpm`.
 
 ```bash
-make up          # build + start web, postgres, minio; seeds a sample document
-make down        # stop
-make clean       # stop + wipe volumes (fresh keys, empty audit log)
-make logs        # tail all services
+make setup       # first run only: create .env and install workspace deps
+make up          # start postgres + minio, apply schema, seed a sample document
+make down        # stop, keep data
+make clean       # stop + wipe volumes and the signing key (fresh identity)
+make logs / ps   # tail logs / show service status
 
-make test        # vitest: unit + integration (integration needs `make up`)
-make test-unit   # vitest unit only - pure core, no containers needed, fast
-make test-e2e    # Playwright against a running stack (needs `make up`)
-make test-e2e-headed   # same, headed and slowed, so you can watch it
-make demo        # runs the Playwright demo script headed, as a live walkthrough
+make test        # all vitest suites: unit + integration
+make test-unit   # pure core only - no containers needed, ~1s
+make test-integration   # real postgres + minio (needs `make up`)
+make typecheck   # tsc --noEmit across the workspace
 
-make verify      # CLI re-verification of every signature currently stored
-make tamper      # mutates the stored sample document, to demo detection
+make sign        # sign the sample document from the CLI (SIGNER=name)
+make verify      # re-verify every stored signature and the audit chain
+make tamper      # rewrite one byte of the stored document, to demo detection
 ```
 
-Web at http://localhost:3000, MinIO console at http://localhost:9001.
+`make up` takes about three seconds on a warm image cache. MinIO console at
+http://localhost:9001 (credentials in `.env`), where you can watch the stored
+object change when `make tamper` runs.
+
+### The whole thesis, from a cold start
+
+```bash
+make up          # seeds services-agreement.txt
+make sign        # real Ed25519 signature over the stored bytes
+make verify      # VERIFIED
+make tamper      # rewrites the fee from $10,000 to $90,000
+make verify      # TAMPERED (document-hash-mismatch), and exits non-zero
+```
+
+Nothing about the signature record is touched by `make tamper` - only the
+object in storage. That is the point.
 
 Everything is env-driven; `.env.example` is the source of truth for what is
 configurable. Nothing personal, no keys, no endpoints hardcoded in source.
@@ -136,8 +152,10 @@ configurable. Nothing personal, no keys, no endpoints hardcoded in source.
 
 ## The demo script
 
-Five minutes, in this order. `e2e/demo.spec.ts` performs exactly these steps,
-so the script cannot silently rot away from the app.
+Five minutes, in this order. Once `apps/web` and the Playwright suite exist,
+`e2e/demo.spec.ts` will perform exactly these steps, so the script cannot
+silently rot away from the app. Until then, steps 1-5 are runnable today from
+the command line - see "The whole thesis, from a cold start" above.
 
 1. **Open a document.** A sample agreement is seeded on `make up`. The header
    shows its SHA-256.
@@ -197,11 +215,21 @@ Architecture decisions with real trade-offs are written down in `docs/adr/`:
 Spike, dated 2026-09-03. Written to be read and discussed, not deployed.
 See `CLAUDE.md` for conventions and the git workflow.
 
-**What is actually built and verified right now:** `packages/core` - the domain
-model, canonical hashing, the signing and verification rules, and the
-hash-chained audit log, with 43 passing vitest tests including the full tamper
-path. Everything else in this README describes intended design and has not been
-run.
+**Built, run, and verified right now:**
+
+- `packages/core` - domain model, canonical hashing, signing and verification
+  rules, hash-chained audit log. 43 vitest tests, no containers needed.
+- `packages/adapters` - Postgres (signatures + audit chain), MinIO via the AWS
+  S3 SDK (document bytes), Ed25519 signer with a persisted key. 24 tests
+  against the real services, including the tamper path end to end.
+- `infra/docker-compose.yml` and the `make` targets above. Cold start from
+  wiped volumes to a seeded, signable document: about three seconds.
+
+67 tests pass and `tsc --noEmit` is clean across the workspace.
+
+**Not built yet:** `apps/web` (the UI, the canvas, the badge) and the Playwright
+suite. The demo script above is currently a command-line walkthrough; the
+browser half is still to come.
 
 ## License
 

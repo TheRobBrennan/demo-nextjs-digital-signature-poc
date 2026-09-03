@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import type { DrawnSignature, Sha256Hex, SigningPayload } from "./model";
+import type { DrawnSignature, Sha256Hex, SigningPayload } from "./model.ts";
 
 /**
  * Hashing is pure computation, so it lives in core. Key material is not - that

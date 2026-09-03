@@ -6,14 +6,15 @@ Guidance for Claude Code when working in this repo.
 
 Scaffolded 2026-09-03 by Opus 5 as a two-hour spike ahead of a 2pm meeting.
 
-**Verified working:** `packages/core` - 43 vitest tests pass and `tsc --noEmit`
-is clean. Run `pnpm --filter @sig/core test`.
+**Verified working, actually executed:** `packages/core` (43 tests),
+`packages/adapters` against real Postgres and MinIO (24 tests), the compose
+stack, and the `make up / sign / verify / tamper / verify` sequence. Cold start
+from `make clean` is about three seconds. `pnpm -r typecheck` is clean.
 
-**Not yet run:** everything else. No Docker image has been built, no adapter
-exists, `apps/web` has not been scaffolded, and every `make` target in
-`README.md` is aspirational. Treat those as unproven until actually executed
-and seen to work - don't report a step as working because the code for it
-exists.
+**Not yet built:** `apps/web` and the Playwright suite. The demo script in
+`README.md` is command-line only until those land. Treat anything not listed as
+verified above as unproven until actually executed and seen to work - don't
+report a step as working because the code for it exists.
 
 ## What this is
 
@@ -58,25 +59,45 @@ here or suggest them to the user - use `pnpm`, `pnpm add`, `pnpm dlx`. If a
 `package-lock.json` appears, npm was run by mistake: delete it and redo with
 `pnpm install`.
 
+## TypeScript that Node can run directly
+
+Scripts and tests run as `.ts` through Node 24's built-in type stripping, which
+is why there is no build step and no `tsx`/`ts-node` dependency. Strip-only
+mode erases types; it cannot *generate* code. That rules out:
+
+- **Parameter properties** - `constructor(private readonly pool: Pool) {}`
+  fails at runtime with `ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX`. Declare the field
+  and assign it in the body. This bit us once already.
+- **`enum`** - use a union of string literals or `as const`.
+- **`namespace`** with runtime members, and legacy decorators.
+
+Relative imports need the **explicit `.ts` extension** (`./hash.ts`, not
+`./hash`) - Node's ESM resolver does not guess extensions. `tsconfig.json` sets
+`allowImportingTsExtensions`, and Vite/vitest handle it fine.
+
 ## Commands
 
 `make` is the source of truth - prefer it over raw `docker compose` or `pnpm`:
 
 ```bash
-make up          # build + start web, postgres, minio; seeds a sample document
-make down        # stop
-make clean       # stop + wipe volumes (fresh keys, empty audit log)
-make logs        # tail all services
+make setup       # first run: .env + pnpm install
+make up          # postgres + minio, schema, seeded sample document (~3s)
+make down        # stop, keep data
+make clean       # stop + wipe volumes AND the signing key
+make logs / ps
 
-make test        # vitest unit + integration (integration needs `make up`)
-make test-unit   # vitest unit only - pure core, no containers, fast
-make test-e2e    # Playwright against a running stack (needs `make up`)
-make test-e2e-headed   # headed + slowed, so the browser is watchable
-make demo        # the Playwright demo script, headed, as a live walkthrough
+make test        # test-unit + test-integration
+make test-unit   # pure core, no containers, ~1s - the fast loop
+make test-integration   # real postgres + minio, needs `make up`
+make typecheck
 
-make verify      # CLI re-verification of every stored signature
-make tamper      # mutate the stored sample document, to demo detection
+make sign        # sign the sample document from the CLI
+make verify      # re-verify everything; exits non-zero on any failure
+make tamper      # rewrite the stored document, to demo detection
 ```
+
+`make verify` exiting non-zero after `make tamper` is correct behavior, not a
+break - it is meant to be usable as a check.
 
 `make test-unit` is the fast loop - use it while working in `packages/core`.
 Only reach for `make up` when touching adapters, routes, or UI.
@@ -106,8 +127,10 @@ Only reach for `make up` when touching adapters, routes, or UI.
   paths all come from `.env`; `.env.example` is the source of truth for what
   is configurable. Never hardcode a personal email, endpoint, or key into
   source or into a test fixture.
-- **Signing keys are generated at boot into a Docker volume** and are
-  gitignored. Never commit a private key, not even a demo one - `make clean`
+- **Integration tests never touch demo data.** Each run gets a throwaway
+  Postgres schema and throwaway MinIO buckets, cleaned up afterward. A test run
+  must not wipe the document you are about to show someone.
+- **Signing keys are generated on first use into a gitignored path** and are Never commit a private key, not even a demo one - `make clean`
   regenerates.
 - **Testing is split on purpose:** vitest for anything decidable without a
   browser (core rules, adapter contracts), Playwright for what needs a real

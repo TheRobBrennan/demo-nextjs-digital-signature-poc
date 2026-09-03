@@ -1,13 +1,19 @@
 export class DocumentNotFoundError extends Error {
-  constructor(public readonly documentId: string) {
+  readonly documentId: string;
+
+  constructor(documentId: string) {
     super(`No document with id ${documentId}`);
+    this.documentId = documentId;
     this.name = "DocumentNotFoundError";
   }
 }
 
 export class SignatureNotFoundError extends Error {
-  constructor(public readonly signatureId: string) {
+  readonly signatureId: string;
+
+  constructor(signatureId: string) {
     super(`No signature with id ${signatureId}`);
+    this.signatureId = signatureId;
     this.name = "SignatureNotFoundError";
   }
 }

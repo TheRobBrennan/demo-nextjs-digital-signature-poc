@@ -5,10 +5,10 @@ import {
   InMemoryDocumentStore,
   InMemorySignatureRepository,
   SequentialIds,
-} from "../src/testkit";
-import type { DrawnSignature, SigningPayload, SignatureRecord } from "../src/model";
-import { hashDrawnSignature, sha256 } from "../src/hash";
-import type { SigningDeps } from "../src/signing";
+} from "../src/testkit/index.ts";
+import type { DrawnSignature, SigningPayload, SignatureRecord } from "../src/model.ts";
+import { hashDrawnSignature, sha256 } from "../src/hash.ts";
+import type { SigningDeps } from "../src/signing.ts";
 
 export const utf8 = (text: string): Uint8Array =>
   new TextEncoder().encode(text);

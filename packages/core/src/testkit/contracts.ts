@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { verifyAuditChain } from "../audit";
-import type { AuditLog, DocumentStore, SignatureRepository } from "../ports";
-import type { SignatureRecord } from "../model";
+import { verifyAuditChain } from "../audit.ts";
+import type { AuditLog, DocumentStore, SignatureRepository } from "../ports.ts";
+import type { SignatureRecord } from "../model.ts";
 
 /**
  * Contract suites. Every implementation of a port must pass these - the

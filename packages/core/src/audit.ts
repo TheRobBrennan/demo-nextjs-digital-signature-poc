@@ -1,10 +1,10 @@
-import { canonicalize, sha256Utf8 } from "./hash";
+import { canonicalize, sha256Utf8 } from "./hash.ts";
 import type {
   AuditEvent,
   ChainVerification,
   NewAuditEvent,
   Sha256Hex,
-} from "./model";
+} from "./model.ts";
 
 /** prevHash of the first event in a chain. */
 export const GENESIS_PREV_HASH: Sha256Hex = "0".repeat(64);

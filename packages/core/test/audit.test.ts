@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { GENESIS_PREV_HASH, verifyAuditChain } from "../src/audit";
-import { InMemoryAuditLog } from "../src/testkit";
-import type { AuditEvent } from "../src/model";
+import { GENESIS_PREV_HASH, verifyAuditChain } from "../src/audit.ts";
+import { InMemoryAuditLog } from "../src/testkit/index.ts";
+import type { AuditEvent } from "../src/model.ts";
 
 async function makeChain(length: number): Promise<InMemoryAuditLog> {
   const log = new InMemoryAuditLog();
@@ -50,7 +50,7 @@ describe("verifyAuditChain", () => {
     const events = await log.list();
     const target = events[2]!;
     const edited: AuditEvent = { ...target, actor: "mallory@example.com" };
-    const { hashAuditEvent } = await import("../src/audit");
+    const { hashAuditEvent } = await import("../src/audit.ts");
     log.rewriteEvent(3, {
       ...edited,
       hash: hashAuditEvent(edited),

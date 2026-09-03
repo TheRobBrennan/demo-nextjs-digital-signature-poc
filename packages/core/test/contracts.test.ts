@@ -5,8 +5,8 @@ import {
   describeAuditLogContract,
   describeDocumentStoreContract,
   describeSignatureRepositoryContract,
-} from "../src/testkit";
-import { makeRecord } from "./support";
+} from "../src/testkit/index.ts";
+import { makeRecord } from "./support.ts";
 
 /**
  * The fakes run the same suites the real adapters run in

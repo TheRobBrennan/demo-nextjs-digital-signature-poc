@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { DocumentNotFoundError, EmptySignatureError } from "../src/errors";
-import { hashDrawnSignature, sha256 } from "../src/hash";
-import { signDocument, verifyDocument, verifySignature } from "../src/signing";
-import { A_SIGNATURE, SAMPLE_DOCUMENT, makeHarness, utf8 } from "./support";
+import { DocumentNotFoundError, EmptySignatureError } from "../src/errors.ts";
+import { hashDrawnSignature, sha256 } from "../src/hash.ts";
+import { signDocument, verifyDocument, verifySignature } from "../src/signing.ts";
+import { A_SIGNATURE, SAMPLE_DOCUMENT, makeHarness, utf8 } from "./support.ts";
 
 describe("signDocument", () => {
   it("signs the bytes currently stored, not the metadata", async () => {

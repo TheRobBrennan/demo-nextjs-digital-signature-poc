@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { canonicalize, hashDrawnSignature, sha256, sha256Utf8 } from "../src/hash";
-import { A_SIGNATURE } from "./support";
-import type { DrawnSignature } from "../src/model";
+import { canonicalize, hashDrawnSignature, sha256, sha256Utf8 } from "../src/hash.ts";
+import { A_SIGNATURE } from "./support.ts";
+import type { DrawnSignature } from "../src/model.ts";
 
 describe("canonicalize", () => {
   it("is independent of key order", () => {

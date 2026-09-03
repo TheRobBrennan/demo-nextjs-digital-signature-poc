@@ -10,7 +10,7 @@ import type {
   DocumentRef,
   NewAuditEvent,
   SignatureRecord,
-} from "./model";
+} from "./model.ts";
 
 export interface DocumentStore {
   put(input: {

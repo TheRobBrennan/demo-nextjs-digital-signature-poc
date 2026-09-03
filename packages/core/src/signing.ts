@@ -1,5 +1,5 @@
-import { DocumentNotFoundError, EmptySignatureError } from "./errors";
-import { hashDrawnSignature, payloadBytes, sha256 } from "./hash";
+import { DocumentNotFoundError, EmptySignatureError } from "./errors.ts";
+import { hashDrawnSignature, payloadBytes, sha256 } from "./hash.ts";
 import type {
   AuditLog,
   Clock,
@@ -7,13 +7,13 @@ import type {
   IdGenerator,
   SignatureRepository,
   Signer,
-} from "./ports";
+} from "./ports.ts";
 import type {
   DrawnSignature,
   SignatureRecord,
   SigningPayload,
   VerificationResult,
-} from "./model";
+} from "./model.ts";
 
 export interface SigningDeps {
   readonly documents: DocumentStore;
