@@ -119,6 +119,7 @@ takes the machine back to where it started.
 make setup       # first run only: create .env and install workspace deps
 make start       # everything in one shot: services up, then the app
 make up          # start postgres + minio, apply schema, seed a sample document
+make up-full     # same, plus the app as a container (builds the image)
 make web         # just the Next.js app (needs `make up` already running)
 make down        # stop, keep data
 make clean       # stop + wipe volumes and the signing key (fresh identity)
@@ -266,8 +267,12 @@ See `CLAUDE.md` for conventions and the git workflow.
 
 79 tests in total.
 
-**Not built yet:** the web service is not containerized - `make web` runs it
-natively against the compose stack.
+- `infra/web.Dockerfile` - the app as a multi-stage production image, running
+  as a non-root user off Next's standalone output.
+
+Everything runs in Docker: `make up-full` builds and starts the app alongside
+Postgres and MinIO. `make up` plus `make web` remains the fast native loop for
+development, and is what the guided demo drives.
 
 ## License
 

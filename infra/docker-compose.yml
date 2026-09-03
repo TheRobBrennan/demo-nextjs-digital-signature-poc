@@ -42,6 +42,37 @@ services:
       timeout: 3s
       retries: 30
 
+  # Behind a profile: `make up` stays infrastructure-only (fast, and what the
+  # guided demo drives with a native dev server), while `make up-full` runs the
+  # app as a container the way it would actually deploy.
+  web:
+    profiles: ["full"]
+    build:
+      context: ..
+      dockerfile: infra/web.Dockerfile
+    restart: unless-stopped
+    environment:
+      # Service names, not localhost - this resolves inside the compose network.
+      DATABASE_URL: postgresql://${POSTGRES_USER:-sigdemo}:${POSTGRES_PASSWORD:-sigdemo}@postgres:5432/${POSTGRES_DB:-sigdemo}
+      S3_ENDPOINT: http://minio:9000
+      S3_REGION: ${S3_REGION:-us-west-2}
+      S3_BUCKET: ${S3_BUCKET:-documents}
+      S3_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-sigdemo}
+      S3_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-sigdemo123}
+      S3_FORCE_PATH_STYLE: "true"
+      SIGNING_KEY_PATH: /app/keys/signing-key.pem
+    volumes:
+      # Shared with the host so a document signed by `make sign` verifies in
+      # the container and vice versa. Two key files was a real bug once.
+      - ../keys:/app/keys
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
 volumes:
   postgres-data:
   minio-data:

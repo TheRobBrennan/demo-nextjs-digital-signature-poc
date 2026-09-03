@@ -316,6 +316,12 @@ async function main(): Promise<void> {
     page,
     "The fee now reads $90,000",
     "Nothing about the signature record was touched. The signature is still valid - it just no longer describes this document. Stop talking here and let them read it.",
+    async () => {
+      // Back to the top: the changed fee and the changed document hash are
+      // both up there, and they are the thing to look at on this beat.
+      await page.evaluate(() => window.scrollTo({ top: 0, behavior: "smooth" }));
+      await page.waitForTimeout(600);
+    },
   );
 
   await step(

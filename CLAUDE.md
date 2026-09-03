@@ -11,7 +11,8 @@ Scaffolded 2026-09-03 by Opus 5 as a two-hour spike ahead of a 2pm meeting.
 stack, and the `make up / sign / verify / tamper / verify` sequence. Cold start
 from `make clean` is about three seconds. `pnpm -r typecheck` is clean.
 
-**Not yet built:** `apps/web` and the Playwright suite. The demo script in
+**Not yet built:** nothing major. The containerized web service, the Playwright
+suite and the guided demo all landed. The demo script in
 `README.md` is command-line only until those land. Treat anything not listed as
 verified above as unproven until actually executed and seen to work - don't
 report a step as working because the code for it exists.
@@ -89,6 +90,7 @@ Relative imports need the **explicit `.ts` extension** (`./hash.ts`, not
 make setup       # first run: .env + pnpm install
 make start       # up + web in one shot - what a person running this wants
 make up          # postgres + minio, schema, seeded sample document (~3s)
+make up-full     # same, plus the app as a container (`profiles: [full]`)
 make web         # just the app (needs `make up`)
 make down        # stop, keep data
 make clean       # stop + wipe volumes AND the signing key
@@ -181,6 +183,12 @@ Only reach for `make up` when touching adapters, routes, or UI.
   numbered sequentially. Write it when the decision is made, not afterward, and
   include the alternatives that were rejected and why. If a reader would have to
   ask "why this and not the obvious thing," that is an ADR.
+- **The web container shares the host's `keys/` directory** via a bind mount.
+  Without it the container and the host CLI mint separate signing keys, and
+  CLI-signed documents show INVALID SIGNATURE in the browser. That was a real
+  bug; do not "tidy" the mount away.
+- **Regenerate PR screenshots against `make up-full`, never `make web`** - the
+  dev server stamps a Next.js dev indicator into every capture. `make shots`.
 - **Prefer deleting over disabling.** No skipped tests, no commented-out
   blocks left behind. This is a spike someone will read closely.
 - **No em dashes** in code comments, docs, commits, or PR bodies - use a

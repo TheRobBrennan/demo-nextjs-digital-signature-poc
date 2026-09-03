@@ -10,7 +10,7 @@ COMPOSE := docker compose --env-file .env -f infra/docker-compose.yml
 .DEFAULT_GOAL := help
 .PHONY: help setup up down clean logs ps test test-unit test-integration \
         seed sign verify tamper typecheck web start open preflight demo test-e2e \
-        clean-quiet up-quiet rehearse nuke check-web demo-auto
+        clean-quiet up-quiet rehearse nuke check-web demo-auto up-full build shots
 
 help: ## Show available targets
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -30,11 +30,25 @@ up: .env ## Start postgres + minio, apply schema, seed the sample document
 	@echo "  MinIO console  http://localhost:$${MINIO_CONSOLE_PORT:-9001}"
 	@echo "  Next: make verify   (or make tamper, then make verify again)"
 
+up-full: .env ## Same, but run the app as a container too (builds the image)
+	@$(COMPOSE) --profile full up -d --build --wait
+	@$(MAKE) --no-print-directory seed
+	@echo ""
+	@echo "  App            http://localhost:$${WEB_PORT:-3000}   (containerized)"
+	@echo "  MinIO console  http://localhost:$${MINIO_CONSOLE_PORT:-9001}"
+
+shots: .env check-web ## Regenerate the PR screenshots in assets/
+	@# Run against `make up-full`; the dev server stamps a dev badge on them.
+	@node e2e/shots.mjs
+
+build: .env ## Build the web image without starting anything
+	@$(COMPOSE) --profile full build web
+
 down: ## Stop services, keep data
-	@$(COMPOSE) down
+	@$(COMPOSE) --profile full down
 
 clean: ## Stop services and wipe volumes + signing key (fresh identity)
-	@$(COMPOSE) down -v
+	@$(COMPOSE) --profile full down -v
 	@rm -rf keys
 	@echo "Volumes and signing key removed. Previously stored signatures are gone."
 
@@ -74,8 +88,8 @@ demo: .env ## THE DEMO - stack up from nothing, then step through it yourself
 rehearse: .env check-web ## Playwright walkthrough against an already-running app
 	@HEADED=1 SLOWMO=$${SLOWMO:-700} pnpm --filter @sig/e2e exec playwright test tests/02-demo.spec.ts
 
-nuke: ## clean, AND delete the postgres/minio images so the next run re-pulls
-	@$(COMPOSE) down -v --rmi all 2>/dev/null || true
+nuke: ## clean, AND delete the images so the next run rebuilds and re-pulls
+	@$(COMPOSE) --profile full down -v --rmi all 2>/dev/null || true
 	@rm -rf keys
 	@echo "Images removed. The next 'make up' re-downloads ~150MB - do this on"
 	@echo "good wifi, well before a demo, never during one."
@@ -87,7 +101,7 @@ test-e2e: .env check-web ## Playwright, headless (needs `make web` running)
 	@pnpm --filter @sig/e2e test
 
 clean-quiet:
-	@$(COMPOSE) down -v >/dev/null 2>&1 || true
+	@$(COMPOSE) --profile full down -v >/dev/null 2>&1 || true
 
 up-quiet:
 	@$(COMPOSE) up -d --wait >/dev/null 2>&1
