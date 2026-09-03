@@ -12,13 +12,17 @@
   "license": "MIT",
   "author": "Rob Brennan <rob@sploosh.ai>",
   "scripts": {
+    "demo": "make demo",
     "start": "make start",
     "stop": "make down",
     "clean": "make clean",
     "dev": "make web",
+    "preflight": "make preflight",
+    "rehearse": "make rehearse",
     "test": "make test",
     "test:unit": "make test-unit",
     "test:integration": "make test-integration",
+    "test:e2e": "make test-e2e",
     "typecheck": "make typecheck"
   },
   "private": true,

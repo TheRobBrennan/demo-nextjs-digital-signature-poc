@@ -10,7 +10,7 @@ COMPOSE := docker compose --env-file .env -f infra/docker-compose.yml
 .DEFAULT_GOAL := help
 .PHONY: help setup up down clean logs ps test test-unit test-integration \
         seed sign verify tamper typecheck web start open preflight demo test-e2e \
-        clean-quiet up-quiet
+        clean-quiet up-quiet rehearse nuke
 
 help: ## Show available targets
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -54,8 +54,17 @@ open: ## Open the app and MinIO console in your default browser
 preflight: .env ## Watch the pre-demo checks run in a visible browser
 	@HEADED=1 SLOWMO=$${SLOWMO:-600} pnpm --filter @sig/e2e exec playwright test tests/01-preflight.spec.ts
 
-demo: .env ## Watch the full demo walkthrough run in a visible browser
+demo: .env ## THE DEMO - stack up from nothing, then step through it yourself
+	@node e2e/guided-demo.ts
+
+rehearse: .env ## Watch the walkthrough run unattended in a visible browser
 	@HEADED=1 SLOWMO=$${SLOWMO:-700} pnpm --filter @sig/e2e exec playwright test tests/02-demo.spec.ts
+
+nuke: ## clean, AND delete the postgres/minio images so the next run re-pulls
+	@$(COMPOSE) down -v --rmi all 2>/dev/null || true
+	@rm -rf keys
+	@echo "Images removed. The next 'make up' re-downloads ~150MB - do this on"
+	@echo "good wifi, well before a demo, never during one."
 
 test-e2e: .env ## Playwright, headless (needs `make web` running)
 	@# The suite asserts a clean starting state and then dirties it, so it

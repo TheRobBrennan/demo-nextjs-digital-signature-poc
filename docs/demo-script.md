@@ -1,5 +1,29 @@
 # Demo script - Yuzi Care preview, 2026-09-03
 
+## The one command
+
+```bash
+pnpm demo
+```
+
+Resets Docker, brings Postgres and MinIO up from nothing, starts the app, opens
+a browser the client watches, and steps through the walkthrough **one beat at a
+time - you press Enter to advance**, so the pacing is yours.
+
+Each beat prints its talk track to your terminal and paints a caption across
+the bottom of the page for them.
+
+- `Enter` advances
+- `q` quits early
+- Closing the browser window ends it cleanly
+- `Ctrl-C` is always safe
+
+It leaves Docker running and the document tampered. `make clean && make up`
+resets.
+
+The rest of this document is the same walkthrough for driving by hand, plus the
+questions and recovery steps.
+
 Twelve minutes if nobody interrupts, which they will. The optional sections at
 the end are there to be pulled in when a question opens the door, not to be
 worked through in order.
@@ -96,6 +120,22 @@ signature.
 Do not rush this. This is the part that separates the demo from a UI mockup.
 
 ### 4. Tamper (2 min) - the payoff
+
+**Where the modification is actually demonstrated.** Three layers of evidence,
+in increasing order of how hard they are to dismiss:
+
+1. **The page** - the fee changes to $90,000 and the badge goes red. A skeptic
+   can call this UI theater.
+2. **The hash, before and after** - `pnpm demo` prints the object's SHA-256
+   read straight from storage on either side of the click, so the two values
+   sit next to each other in your terminal.
+3. **`make verify` from the terminal** - same TAMPERED verdict, computed
+   outside the browser entirely, reading the bytes out of object storage. This
+   is the one that closes the argument.
+
+For a fourth, if someone is really pushing: the MinIO console, `documents`
+bucket, and the object's **Last Modified** timestamp. That is the edit on disk,
+in a tool that knows nothing about this application.
 
 > "Now suppose someone gets access to the document store. Not the database -
 > just the file storage. They cannot forge a signature, so instead they edit
