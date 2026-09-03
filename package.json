@@ -12,6 +12,14 @@
   "license": "MIT",
   "author": "Rob Brennan <rob@sploosh.ai>",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "pnpm -r test",
+    "test:unit": "pnpm --filter @sig/core test",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "private": true,
+  "packageManager": "pnpm@10.11.1",
+  "engines": {
+    "node": ">=24",
+    "pnpm": ">=10"
   }
 }

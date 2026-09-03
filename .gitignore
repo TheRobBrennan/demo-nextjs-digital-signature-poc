@@ -1,0 +1,17 @@
+node_modules/
+.pnpm-store/
+dist/
+.next/
+coverage/
+*.tsbuildinfo
+
+.env
+.env.local
+
+# signing keys are generated at boot into a volume - never commit one
+keys/
+*.pem
+
+test-results/
+playwright-report/
+.DS_Store

@@ -35,6 +35,12 @@ packages/core        Pure TypeScript. Domain model + rules. Zero I/O, zero
                      framework imports. This is where correctness lives, and
                      it is testable with no containers running.
 
+packages/core
+  /testkit           The in-memory fakes AND the contract test suites every
+                     adapter must pass. Core owns the port, so core owns the
+                     contract; adapters import it and run it against the real
+                     thing.
+
 packages/adapters    Implementations of the ports core defines - Postgres
                      repository, MinIO object storage, Ed25519 signer - plus
                      in-memory fakes used by the unit and integration tests.
@@ -85,8 +91,25 @@ Named so nobody has to guess whether it was forgotten:
 
 ## Running it
 
-Requires Docker and Node 22. `make` is the source of truth - prefer it over
-raw `docker compose` or `pnpm` invocations.
+### Prerequisites - two things
+
+1. **Docker Desktop**
+2. **Node 24** (current LTS) - `nvm use` picks it up from `.nvmrc`
+
+That is the whole list. You do **not** need to install pnpm: this repo pins
+`packageManager` in `package.json`, and Node 24 ships Corepack, which fetches
+the right pnpm version on first use.
+
+```bash
+corepack enable      # once per machine
+nvm use              # reads .nvmrc -> Node 24
+```
+
+Postgres, MinIO, the signing key, and the sample document all live in
+containers or in volumes. Nothing is installed on the host, and `make clean`
+takes the machine back to where it started.
+
+`make` is the source of truth - prefer it over raw `docker compose` or `pnpm`.
 
 ```bash
 make up          # build + start web, postgres, minio; seeds a sample document
@@ -162,10 +185,23 @@ the one behavior worth over-testing, because it is the whole thesis.
 
 ---
 
+## Decisions
+
+Architecture decisions with real trade-offs are written down in `docs/adr/`:
+
+- [ADR 0001 - MinIO for document storage](docs/adr/0001-minio-for-document-storage.md),
+  which also explains what MinIO is for anyone who has not used it.
+
 ## Status
 
 Spike, dated 2026-09-03. Written to be read and discussed, not deployed.
 See `CLAUDE.md` for conventions and the git workflow.
+
+**What is actually built and verified right now:** `packages/core` - the domain
+model, canonical hashing, the signing and verification rules, and the
+hash-chained audit log, with 43 passing vitest tests including the full tamper
+path. Everything else in this README describes intended design and has not been
+run.
 
 ## License
 

@@ -5,10 +5,15 @@ Guidance for Claude Code when working in this repo.
 ## Status
 
 Scaffolded 2026-09-03 by Opus 5 as a two-hour spike ahead of a 2pm meeting.
-**Nothing here has been run end to end yet.** `README.md` describes the
-intended design, not verified behavior - treat every command in it as
-unproven until it has actually been executed and seen to work. Don't report a
-step as working because the code for it exists.
+
+**Verified working:** `packages/core` - 43 vitest tests pass and `tsc --noEmit`
+is clean. Run `pnpm --filter @sig/core test`.
+
+**Not yet run:** everything else. No Docker image has been built, no adapter
+exists, `apps/web` has not been scaffolded, and every `make` target in
+`README.md` is aspirational. Treat those as unproven until actually executed
+and seen to work - don't report a step as working because the code for it
+exists.
 
 ## What this is
 
@@ -36,10 +41,20 @@ Every port has both a real adapter and an in-memory fake, and both are run
 against the same contract test suite. When adding a port, add both, or the
 fakes drift and the unit tests stop meaning anything.
 
-## Package manager - pnpm, never npm
+## Prerequisites are Docker Desktop and Node 24. Nothing else.
 
-pnpm workspace, Node 22. Never run `npm install`, `npm run`, or `npx` here or
-suggest them to the user - use `pnpm`, `pnpm add`, `pnpm dlx`. If a
+This is a hard constraint, not a preference. Anyone should be able to clone and
+run this with only Docker Desktop and Node 24 (current LTS, pinned in `.nvmrc`
+and `engines`) on their machine. **Do not add a step that requires installing
+anything else** - no global CLIs, no Python, no cloud account, no manually
+installed pnpm. If a feature seems to need one, put it in a container.
+
+pnpm comes from Corepack, which ships with Node 24, driven by the
+`packageManager` pin in the root `package.json`. `corepack enable` once, and
+the correct pnpm version is fetched automatically.
+
+**pnpm workspace, never npm.** Never run `npm install`, `npm run`, or `npx`
+here or suggest them to the user - use `pnpm`, `pnpm add`, `pnpm dlx`. If a
 `package-lock.json` appears, npm was run by mistake: delete it and redo with
 `pnpm install`.
 
@@ -104,6 +119,10 @@ Only reach for `make up` when touching adapters, routes, or UI.
 - **`e2e/demo.spec.ts` is the demo script.** If the demo walkthrough in
   `README.md` changes, change that test in the same commit, and vice versa -
   they are two views of one thing, and CI is what keeps them honest.
+- **Architecture decisions with real trade-offs get an ADR** in `docs/adr/`,
+  numbered sequentially. Write it when the decision is made, not afterward, and
+  include the alternatives that were rejected and why. If a reader would have to
+  ask "why this and not the obvious thing," that is an ADR.
 - **Prefer deleting over disabling.** No skipped tests, no commented-out
   blocks left behind. This is a spike someone will read closely.
 - **No em dashes** in code comments, docs, commits, or PR bodies - use a
