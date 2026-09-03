@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { mkdtempSync, readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { Ed25519Signer } from "../src/crypto/ed25519-signer.ts";
+import {
+  Ed25519Signer,
+  FileEd25519Signer,
+} from "../src/crypto/ed25519-signer.ts";
 
 const bytes = (text: string): Uint8Array => new TextEncoder().encode(text);
 
@@ -107,6 +110,42 @@ describe("Ed25519Signer", () => {
         bytes: bytes("persisted payload"),
         signature,
         keyId: signing.keyId,
+      }),
+    ).toBe(true);
+  });
+});
+
+describe("FileEd25519Signer", () => {
+  it("picks up a key that was regenerated underneath it", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "sigdemo-rotate-"));
+    const path = join(dir, "key.pem");
+
+    const signer = new FileEd25519Signer(path);
+    const originalKeyId = signer.keyId;
+
+    // Simulate `make clean`: the key file is replaced with a different key.
+    // mtime must differ for the change to be observable.
+    rmSync(path);
+    const regenerated = Ed25519Signer.fromFile(path);
+
+    expect(signer.keyId).not.toBe(originalKeyId);
+    expect(signer.keyId).toBe(regenerated.keyId);
+  });
+
+  it("verifies signatures it made after a rotation", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "sigdemo-rotate2-"));
+    const path = join(dir, "key.pem");
+
+    const signer = new FileEd25519Signer(path);
+    rmSync(path);
+    Ed25519Signer.fromFile(path); // rotate
+
+    const signature = await signer.sign(bytes("after rotation"));
+    expect(
+      await signer.verify({
+        bytes: bytes("after rotation"),
+        signature,
+        keyId: signer.keyId,
       }),
     ).toBe(true);
   });

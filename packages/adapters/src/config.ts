@@ -2,6 +2,8 @@
  * Every endpoint, credential, and path comes from the environment. Nothing is
  * hardcoded - see `.env.example` for the full set.
  */
+import { existsSync } from "node:fs";
+import { dirname, isAbsolute, resolve } from "node:path";
 
 function required(name: string): string {
   const value = process.env[name];
@@ -48,6 +50,31 @@ export function s3ConfigFromEnv(): S3Config {
   };
 }
 
+/**
+ * Walks up from the current directory to the workspace root, identified by
+ * `pnpm-workspace.yaml`.
+ *
+ * This matters because processes in this repo start from different places:
+ * the CLI scripts run from the repo root, but `next dev` runs with its cwd set
+ * to `apps/web`. A relative key path therefore resolved to two different files,
+ * and the web app quietly minted its own signing key - so everything signed on
+ * the command line came back INVALID_SIGNATURE in the browser, which reads
+ * exactly like a forgery. Anchoring to the workspace root makes the path mean
+ * the same thing to every process.
+ */
+function workspaceRoot(): string {
+  let directory = process.cwd();
+  for (;;) {
+    if (existsSync(resolve(directory, "pnpm-workspace.yaml"))) return directory;
+    const parent = dirname(directory);
+    if (parent === directory) return process.cwd();
+    directory = parent;
+  }
+}
+
 export function signingKeyPathFromEnv(): string {
-  return optional("SIGNING_KEY_PATH", "./keys/signing-key.pem");
+  const configured = optional("SIGNING_KEY_PATH", "./keys/signing-key.pem");
+  return isAbsolute(configured)
+    ? configured
+    : resolve(workspaceRoot(), configured);
 }

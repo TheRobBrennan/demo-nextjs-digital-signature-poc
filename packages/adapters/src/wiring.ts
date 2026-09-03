@@ -11,7 +11,7 @@ import { createPool, ensureSchema, waitForPostgres } from "./postgres/client.ts"
 import { PostgresAuditLog } from "./postgres/audit-log.ts";
 import { PostgresSignatureRepository } from "./postgres/signature-repository.ts";
 import { S3DocumentStore } from "./s3/document-store.ts";
-import { Ed25519Signer } from "./crypto/ed25519-signer.ts";
+import { FileEd25519Signer } from "./crypto/ed25519-signer.ts";
 
 /**
  * The composition root - the one place that knows which implementation of each
@@ -36,7 +36,9 @@ export async function wireFromEnv(): Promise<Wiring> {
     documents,
     signatures: new PostgresSignatureRepository(pool),
     audit: new PostgresAuditLog(pool),
-    signer: Ed25519Signer.fromFile(signingKeyPathFromEnv()),
+    // File-backed rather than pinned at construction: `make clean` swaps the
+    // key underneath a long-running dev server.
+    signer: new FileEd25519Signer(signingKeyPathFromEnv()),
     clock: { now: () => new Date() },
     ids: { next: () => `sig_${crypto.randomUUID()}` },
     pool,
