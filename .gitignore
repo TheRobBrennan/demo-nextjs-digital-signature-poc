@@ -15,3 +15,5 @@ keys/
 test-results/
 playwright-report/
 .DS_Store
+next-env.d.ts
+.next/
