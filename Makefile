@@ -9,7 +9,7 @@ COMPOSE := docker compose --env-file .env -f infra/docker-compose.yml
 
 .DEFAULT_GOAL := help
 .PHONY: help setup up down clean logs ps test test-unit test-integration \
-        seed sign verify tamper typecheck web
+        seed sign verify tamper typecheck web start
 
 help: ## Show available targets
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -46,8 +46,13 @@ ps: ## Show service status
 seed: .env ## Load the sample agreement into object storage
 	@node --env-file=.env packages/adapters/scripts/seed.ts
 
+start: .env ## Everything in one shot: services up, then the app
+	@$(MAKE) --no-print-directory up
+	@$(MAKE) --no-print-directory web
+
 web: .env ## Run the Next.js app at http://localhost:3000 (needs `make up`)
-	@pnpm --filter @sig/web dev
+	@# Next loads .env from apps/web, not the repo root, so export it here.
+	@set -a && . ./.env && set +a && pnpm --filter @sig/web dev
 
 sign: .env ## Sign the sample document from the CLI (SIGNER=name to override)
 	@node --env-file=.env packages/adapters/scripts/sign.ts "$${SIGNER:-rob@sploosh.ai}"

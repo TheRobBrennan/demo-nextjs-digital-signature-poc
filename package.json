@@ -12,9 +12,14 @@
   "license": "MIT",
   "author": "Rob Brennan <rob@sploosh.ai>",
   "scripts": {
-    "test": "pnpm -r test",
-    "test:unit": "pnpm --filter @sig/core test",
-    "typecheck": "pnpm -r typecheck"
+    "start": "make start",
+    "stop": "make down",
+    "clean": "make clean",
+    "dev": "make web",
+    "test": "make test",
+    "test:unit": "make test-unit",
+    "test:integration": "make test-integration",
+    "typecheck": "make typecheck"
   },
   "private": true,
   "packageManager": "pnpm@10.11.1",

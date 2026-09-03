@@ -59,6 +59,12 @@ here or suggest them to the user - use `pnpm`, `pnpm add`, `pnpm dlx`. If a
 `package-lock.json` appears, npm was run by mistake: delete it and redo with
 `pnpm install`.
 
+The user is coming from npm and has npm muscle memory. Always give them the
+pnpm command, not the npm one, and point at
+[docs/guides/pnpm-for-npm-users.md](docs/guides/pnpm-for-npm-users.md) rather
+than re-explaining `--filter` from scratch. Keep that guide current when the
+root scripts change.
+
 ## TypeScript that Node can run directly
 
 Scripts and tests run as `.ts` through Node 24's built-in type stripping, which
@@ -81,7 +87,9 @@ Relative imports need the **explicit `.ts` extension** (`./hash.ts`, not
 
 ```bash
 make setup       # first run: .env + pnpm install
+make start       # up + web in one shot - what a person running this wants
 make up          # postgres + minio, schema, seeded sample document (~3s)
+make web         # just the app (needs `make up`)
 make down        # stop, keep data
 make clean       # stop + wipe volumes AND the signing key
 make logs / ps
@@ -98,6 +106,15 @@ make tamper      # rewrite the stored document, to demo detection
 
 `make verify` exiting non-zero after `make tamper` is correct behavior, not a
 break - it is meant to be usable as a check.
+
+The root `package.json` scripts (`pnpm start`, `pnpm stop`, `pnpm test`, ...)
+are thin wrappers that shell out to these targets. **Put new behavior in the
+Makefile, not in a package script** - duplicating a compose invocation or an
+env-loading incantation in both is how the two drift apart.
+
+`make web` sources `.env` itself. Next only auto-loads a `.env` next to the app
+(`apps/web`), not the one at the repo root, so running `pnpm --filter @sig/web
+dev` directly fails with a missing `DATABASE_URL`. Use the make target.
 
 `make test-unit` is the fast loop - use it while working in `packages/core`.
 Only reach for `make up` when touching adapters, routes, or UI.

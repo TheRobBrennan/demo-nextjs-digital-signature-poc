@@ -98,7 +98,11 @@ Named so nobody has to guess whether it was forgotten:
 
 That is the whole list. You do **not** need to install pnpm: this repo pins
 `packageManager` in `package.json`, and Node 24 ships Corepack, which fetches
-the right pnpm version on first use.
+the right pnpm version on first use. Coming from npm, or would rather not learn
+pnpm at all? See
+[docs/guides/pnpm-for-npm-users.md](docs/guides/pnpm-for-npm-users.md) - the
+short version is that every task here has a `make` target, so you never have to
+type `pnpm`.
 
 ```bash
 corepack enable      # once per machine
@@ -113,7 +117,9 @@ takes the machine back to where it started.
 
 ```bash
 make setup       # first run only: create .env and install workspace deps
+make start       # everything in one shot: services up, then the app
 make up          # start postgres + minio, apply schema, seed a sample document
+make web         # just the Next.js app (needs `make up` already running)
 make down        # stop, keep data
 make clean       # stop + wipe volumes and the signing key (fresh identity)
 make logs / ps   # tail logs / show service status
@@ -127,6 +133,18 @@ make sign        # sign the sample document from the CLI (SIGNER=name)
 make verify      # re-verify every stored signature and the audit chain
 make tamper      # rewrite one byte of the stored document, to demo detection
 ```
+
+The short version for a first run:
+
+```bash
+corepack enable && nvm use
+make setup
+make start        # or: pnpm start
+```
+
+`pnpm start`, `pnpm stop`, `pnpm test` and friends are thin wrappers that shell
+out to the make targets, so there is one source of truth for the compose
+invocation and the environment handling.
 
 `make up` takes about three seconds on a warm image cache. MinIO console at
 http://localhost:9001 (credentials in `.env`), where you can watch the stored
@@ -209,6 +227,13 @@ Architecture decisions with real trade-offs are written down in `docs/adr/`:
 
 - [ADR 0001 - MinIO for document storage](docs/adr/0001-minio-for-document-storage.md),
   which also explains what MinIO is for anyone who has not used it.
+
+Guides, for tools this repo uses that you may not have met:
+
+- [pnpm for npm users](docs/guides/pnpm-for-npm-users.md) - the cheat sheet,
+  workspaces and `--filter`, and the gotchas coming from npm.
+- [What an ADR is](docs/adr/README.md) - why these documents exist and when to
+  write one.
 
 ## Status
 
