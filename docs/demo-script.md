@@ -18,6 +18,18 @@ the bottom of the page for them.
 - Closing the browser window ends it cleanly
 - `Ctrl-C` is always safe
 
+Autoplay, for a rehearsal or if you would rather narrate over it without
+touching the keyboard:
+
+```bash
+pnpm demo:auto              # ~5s per beat
+STEP_DELAY=8000 pnpm demo:auto   # slower
+```
+
+Both start Docker and the app themselves. `make preflight`, `make rehearse`
+and `make test-e2e` do **not** - they run against an app you already have
+running, and will tell you so if it is not up.
+
 It leaves Docker running and the document tampered. `make clean && make up`
 resets.
 

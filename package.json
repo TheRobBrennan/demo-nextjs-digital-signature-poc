@@ -13,6 +13,7 @@
   "author": "Rob Brennan <rob@sploosh.ai>",
   "scripts": {
     "demo": "make demo",
+    "demo:auto": "make demo-auto",
     "start": "make start",
     "stop": "make down",
     "clean": "make clean",

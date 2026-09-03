@@ -10,7 +10,7 @@ COMPOSE := docker compose --env-file .env -f infra/docker-compose.yml
 .DEFAULT_GOAL := help
 .PHONY: help setup up down clean logs ps test test-unit test-integration \
         seed sign verify tamper typecheck web start open preflight demo test-e2e \
-        clean-quiet up-quiet rehearse nuke
+        clean-quiet up-quiet rehearse nuke check-web demo-auto
 
 help: ## Show available targets
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -51,13 +51,27 @@ open: ## Open the app and MinIO console in your default browser
 	@open http://localhost:3000
 	@open http://localhost:$${MINIO_CONSOLE_PORT:-9001}
 
-preflight: .env ## Watch the pre-demo checks run in a visible browser
+check-web: ## Fail with a useful message if the app is not up
+	@curl -sf -o /dev/null http://localhost:3000/ || { \
+	  echo ""; \
+	  echo "  The app is not running at http://localhost:3000."; \
+	  echo ""; \
+	  echo "  Start it:   make web        (leave it running in another terminal)"; \
+	  echo "  Or run:     pnpm demo       (starts Docker and the app itself)"; \
+	  echo "              pnpm demo:auto  (same, no keypresses)"; \
+	  echo ""; \
+	  exit 1; }
+
+demo-auto: .env ## THE DEMO, autoplay - starts everything, no keypresses
+	@STEP_DELAY=$${STEP_DELAY:-5000} node e2e/guided-demo.ts < /dev/null
+
+preflight: .env check-web ## Watch the pre-demo checks run in a visible browser
 	@HEADED=1 SLOWMO=$${SLOWMO:-600} pnpm --filter @sig/e2e exec playwright test tests/01-preflight.spec.ts
 
 demo: .env ## THE DEMO - stack up from nothing, then step through it yourself
 	@node e2e/guided-demo.ts
 
-rehearse: .env ## Watch the walkthrough run unattended in a visible browser
+rehearse: .env check-web ## Playwright walkthrough against an already-running app
 	@HEADED=1 SLOWMO=$${SLOWMO:-700} pnpm --filter @sig/e2e exec playwright test tests/02-demo.spec.ts
 
 nuke: ## clean, AND delete the postgres/minio images so the next run re-pulls
@@ -66,7 +80,7 @@ nuke: ## clean, AND delete the postgres/minio images so the next run re-pulls
 	@echo "Images removed. The next 'make up' re-downloads ~150MB - do this on"
 	@echo "good wifi, well before a demo, never during one."
 
-test-e2e: .env ## Playwright, headless (needs `make web` running)
+test-e2e: .env check-web ## Playwright, headless (needs `make web` running)
 	@# The suite asserts a clean starting state and then dirties it, so it
 	@# reseeds first rather than depending on how the stack was left.
 	@$(MAKE) --no-print-directory clean-quiet up-quiet

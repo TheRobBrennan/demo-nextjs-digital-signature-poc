@@ -111,11 +111,15 @@ async function caption(page: Page, title: string, detail: string): Promise<void>
           borderTop: "2px solid #58a6ff",
           color: "#e6e9ef",
           padding: "14px 22px",
+          maxHeight: "30vh",
+          overflowY: "auto",
           font: '16px/1.5 ui-sans-serif, -apple-system, "Segoe UI", sans-serif',
           boxShadow: "0 -10px 30px rgba(0,0,0,.5)",
         });
         document.body.appendChild(bar);
       }
+      // Reserve space so the caption never sits on top of page content.
+      document.body.style.paddingBottom = "120px";
       bar.innerHTML = "";
       const h = document.createElement("div");
       h.textContent = title;
@@ -133,6 +137,18 @@ async function caption(page: Page, title: string, detail: string): Promise<void>
     },
     { title, detail },
   );
+}
+
+/**
+ * Centres an element in the window rather than merely bringing it on screen.
+ * `scrollIntoViewIfNeeded` is happy to leave a target flush against the bottom
+ * edge, hidden behind the caption bar.
+ */
+async function scrollIntoMiddle(page: Page, text: string): Promise<void> {
+  await page.getByText(text).first().evaluate((el) => {
+    el.scrollIntoView({ block: "center", behavior: "smooth" });
+  });
+  await page.waitForTimeout(400);
 }
 
 let beat = 0;
@@ -232,9 +248,15 @@ async function main(): Promise<void> {
   console.log(green(`  App ready at ${APP_URL}`));
 
   // --- 3. The browser the client watches ------------------------------------
-  browser = await chromium.launch({ headless: false, args: ["--window-size=1280,1000"] });
+  browser = await chromium.launch({
+    headless: false,
+    args: ["--window-size=1400,1000", "--window-position=40,40"],
+  });
   watchForBrowserClose(browser);
-  const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  // viewport: null makes the page use the real window size. A fixed viewport
+  // taller than the window clips the bottom of the page, which is exactly
+  // where the caption bar lives - it went missing on shorter displays.
+  const context = await browser.newContext({ viewport: null });
   const page = await context.newPage();
   await page.goto(APP_URL);
 
@@ -263,7 +285,7 @@ async function main(): Promise<void> {
     "What was actually signed",
     "Not the image - a payload binding the document hash, who signed, when, and a hash of the strokes. The image is evidence for a human; the payload is evidence for a machine.",
     async () => {
-      await page.getByText("DOCUMENT HASH SIGNED OVER").scrollIntoViewIfNeeded();
+      await scrollIntoMiddle(page, "DOCUMENT HASH SIGNED OVER");
     },
   );
 
@@ -280,7 +302,7 @@ async function main(): Promise<void> {
     async () => {
       await page.getByRole("button", { name: "Tamper with document" }).click();
       await page.locator(".badge.bad", { hasText: "TAMPERED" }).waitFor();
-      await page.getByText("The document no longer matches what was signed.").scrollIntoViewIfNeeded();
+      await scrollIntoMiddle(page, "The document no longer matches what was signed.");
     },
   );
 
@@ -319,7 +341,7 @@ async function main(): Promise<void> {
     "The audit log",
     "Every event carries the hash of the one before it. Editing a past entry breaks the chain and the log names which link broke. It still reads CHAIN INTACT because the log honestly recorded the tampering.",
     async () => {
-      await page.getByText("document.tampered").scrollIntoViewIfNeeded();
+      await scrollIntoMiddle(page, "document.tampered");
     },
   );
 
