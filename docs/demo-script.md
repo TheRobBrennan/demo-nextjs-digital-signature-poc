@@ -6,9 +6,14 @@
 pnpm demo
 ```
 
-Resets Docker, brings Postgres and MinIO up from nothing, starts the app, opens
-a browser the client watches, and steps through the walkthrough **one beat at a
-time - you press Enter to advance**, so the pacing is yours.
+Tears Docker down to nothing, then builds and starts **Postgres, MinIO and the
+app - all three as containers** - opens a browser the client watches, and steps
+through the walkthrough **one beat at a time, you press Enter to advance**, so
+the pacing is yours.
+
+It prints the container status once they are up, which is a good moment to
+mention that the app is a production image running as a non-root user, not a
+dev server.
 
 Each beat prints its talk track to your terminal and paints a caption across
 the bottom of the page for them.
@@ -288,8 +293,14 @@ make sign && make verify && make tamper && make verify
 ## Reset between runs
 
 ```bash
-make clean && make up
+make clean && make up-full
 ```
 
-Wipes volumes and the signing key, reseeds the document, and leaves `make web`
-running untouched.
+Wipes volumes and the signing key, then rebuilds and restarts everything. About
+twenty seconds with the image cached.
+
+If you would rather iterate natively - faster reloads, no image rebuild:
+
+```bash
+NATIVE=1 pnpm demo
+```

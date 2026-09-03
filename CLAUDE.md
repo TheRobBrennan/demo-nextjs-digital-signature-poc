@@ -189,6 +189,9 @@ Only reach for `make up` when touching adapters, routes, or UI.
   bug; do not "tidy" the mount away.
 - **Regenerate PR screenshots against `make up-full`, never `make web`** - the
   dev server stamps a Next.js dev indicator into every capture. `make shots`.
+- **The guided demo runs the containerized app**, not a dev server. `NATIVE=1`
+  switches back for fast iteration. If you change what `make up-full` does,
+  re-run `pnpm demo:auto` before claiming the demo still works.
 - **Prefer deleting over disabling.** No skipped tests, no commented-out
   blocks left behind. This is a spike someone will read closely.
 - **No em dashes** in code comments, docs, commits, or PR bodies - use a

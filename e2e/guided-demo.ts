@@ -230,22 +230,50 @@ async function drawSignature(page: Page): Promise<void> {
 async function main(): Promise<void> {
   console.log("");
   console.log(bold("  Digital signature demo"));
-  console.log(dim("  Docker comes up from nothing, then you drive the walkthrough."));
+  console.log(dim("  Postgres, MinIO and the app all come up in Docker from nothing,"));
+  console.log(dim("  then you drive the walkthrough. NATIVE=1 for a host dev server."));
   console.log("");
 
   // --- 1. Clean slate -------------------------------------------------------
-  console.log(cyan("  Resetting Docker (volumes and signing key removed)..."));
+  console.log(cyan("  Resetting Docker (containers, volumes, signing key)..."));
   await run("make", ["clean"]);
-  console.log(cyan("  Starting Postgres and MinIO, applying schema, seeding..."));
-  await run("make", ["up"]);
 
-  // --- 2. The app -----------------------------------------------------------
-  console.log(cyan("  Starting the app..."));
-  // Own process group, so the dev server and its children can all be stopped.
-  const web = spawn("make", ["web"], { stdio: "ignore", detached: true });
-  started.push(web);
+  // --- 2. Everything in containers ------------------------------------------
+  // NATIVE=1 falls back to a dev server on the host, which is faster to
+  // iterate on but is not the thing being demonstrated.
+  if (process.env["NATIVE"] === "1") {
+    console.log(cyan("  Starting Postgres and MinIO, applying schema, seeding..."));
+    await run("make", ["up"]);
+    console.log(cyan("  Starting the app (native dev server)..."));
+    // Own process group, so the dev server and its children can all be stopped.
+    const web = spawn("make", ["web"], { stdio: "ignore", detached: true });
+    started.push(web);
+  } else {
+    console.log(
+      cyan("  Building and starting Postgres, MinIO and the app - all containers..."),
+    );
+    await run("make", ["up-full"]);
+  }
+
   await waitForApp();
   console.log(green(`  App ready at ${APP_URL}`));
+  if (process.env["NATIVE"] !== "1") {
+    const containers = await capture("docker", [
+      "compose",
+      "--env-file",
+      ".env",
+      "-f",
+      "infra/docker-compose.yml",
+      "--profile",
+      "full",
+      "ps",
+      "--format",
+      "{{.Service}} :: {{.Status}}",
+    ]);
+    for (const line of containers.split("\n").filter(Boolean)) {
+      console.log(dim(`    ${line}`));
+    }
+  }
 
   // --- 3. The browser the client watches ------------------------------------
   browser = await chromium.launch({
@@ -364,10 +392,15 @@ async function main(): Promise<void> {
   console.log("");
   console.log(green("  Walkthrough complete."));
   console.log("");
-  console.log("  The app and Docker are still running.");
+  console.log(
+    process.env["NATIVE"] === "1"
+      ? "  The app and Docker are still running."
+      : "  Everything is still running, all in Docker.",
+  );
   console.log(dim(`    ${APP_URL}          the demo`));
   console.log(dim(`    ${MINIO_URL}          MinIO console (sigdemo / sigdemo123)`));
-  console.log(dim("    make clean && make up      reset to a clean document"));
+  console.log(dim("    make clean && make up-full  reset to a clean document"));
+  console.log(dim("    make down                   stop everything"));
   console.log(dim("    make verify                the same result from the terminal"));
   console.log("");
   if (interactive && !browserClosed) {
