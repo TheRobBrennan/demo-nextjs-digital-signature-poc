@@ -170,6 +170,9 @@ configurable. Nothing personal, no keys, no endpoints hardcoded in source.
 
 ## The demo script
 
+The presenter's version, with talk track, likely questions, and recovery steps,
+is in [docs/demo-script.md](docs/demo-script.md).
+
 Five minutes, in this order. Once `apps/web` and the Playwright suite exist,
 `e2e/demo.spec.ts` will perform exactly these steps, so the script cannot
 silently rot away from the app. Until then, steps 1-5 are runnable today from
