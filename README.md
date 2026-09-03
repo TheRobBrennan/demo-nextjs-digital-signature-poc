@@ -23,6 +23,21 @@ the demo.
 
 ---
 
+## Why two data stores
+
+Two kinds of data, with different shapes:
+
+- **Document bytes** are big, opaque and write-once, so they live in **MinIO** -
+  an object store you run yourself that speaks the S3 API, meaning the move to
+  real S3 is an endpoint change rather than a rewrite.
+- **Signature records and audit events** are small, structured, ordered and
+  queried by relationship, and the audit chain depends on real transactions to
+  avoid forking under concurrent appends. Those live in **Postgres**.
+
+Both decisions are written up with their rejected alternatives in
+[docs/adr/](docs/adr/) - [0001](docs/adr/0001-minio-for-document-storage.md) and
+[0002](docs/adr/0002-postgres-for-signatures-and-audit.md).
+
 ## Why this shape
 
 The point of a spike is to make the seams visible. Everything that could
@@ -236,6 +251,8 @@ Architecture decisions with real trade-offs are written down in `docs/adr/`:
 
 - [ADR 0001 - MinIO for document storage](docs/adr/0001-minio-for-document-storage.md),
   which also explains what MinIO is for anyone who has not used it.
+- [ADR 0002 - Postgres for signature records and the audit chain](docs/adr/0002-postgres-for-signatures-and-audit.md),
+  and why the two kinds of data here want different homes.
 
 Guides, for tools this repo uses that you may not have met:
 

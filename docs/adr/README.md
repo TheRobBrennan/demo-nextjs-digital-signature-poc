@@ -66,3 +66,4 @@ engineer who was not in the room.
 | # | Title | Status |
 |---|---|---|
 | [0001](0001-minio-for-document-storage.md) | MinIO for document storage | Accepted |
+| [0002](0002-postgres-for-signatures-and-audit.md) | Postgres for signature records and the audit chain | Accepted |

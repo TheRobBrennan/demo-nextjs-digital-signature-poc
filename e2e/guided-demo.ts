@@ -151,6 +151,29 @@ async function scrollIntoMiddle(page: Page, text: string): Promise<void> {
   await page.waitForTimeout(400);
 }
 
+/**
+ * Blocks until the presenter is ready to move on. Auto-advances when stdin is
+ * not a terminal, which is how the autoplay run works.
+ */
+async function waitForPresenter(indent = "     "): Promise<void> {
+  if (interactive) {
+    console.log(dim(`${indent}[Enter] to continue, q to quit, or just close the window`));
+    abortSteps = new AbortController();
+    let answer: string;
+    try {
+      answer = await rl!.question(indent, { signal: abortSteps.signal });
+    } catch {
+      // Aborted because the browser window was closed.
+      throw new BrowserClosedSignal();
+    }
+    if (browserClosed) throw new BrowserClosedSignal();
+    if (answer.trim().toLowerCase() === "q") throw new QuitSignal();
+  } else {
+    console.log(dim(`${indent}(auto-advancing in ${stepDelayMs}ms)`));
+    await new Promise((r) => setTimeout(r, stepDelayMs));
+  }
+}
+
 let beat = 0;
 
 /** Prints the talk track, captions the page, and waits for Enter. */
@@ -164,22 +187,7 @@ async function step(
   console.log("");
   console.log(cyan(`  ${beat}. ${bold(title)}`));
   console.log(`     ${say}`);
-  if (interactive) {
-    console.log(dim("     [Enter] to continue, q to quit, or just close the window"));
-    abortSteps = new AbortController();
-    let answer: string;
-    try {
-      answer = await rl!.question("     ", { signal: abortSteps.signal });
-    } catch {
-      // Aborted because the browser window was closed.
-      throw new BrowserClosedSignal();
-    }
-    if (browserClosed) throw new BrowserClosedSignal();
-    if (answer.trim().toLowerCase() === "q") throw new QuitSignal();
-  } else {
-    console.log(dim(`     (auto-advancing in ${stepDelayMs}ms)`));
-    await new Promise((r) => setTimeout(r, stepDelayMs));
-  }
+  await waitForPresenter();
 
   await caption(page, title, say);
   if (action) await action();
@@ -238,7 +246,21 @@ async function main(): Promise<void> {
   console.log(cyan("  Resetting Docker (containers, volumes, signing key)..."));
   await run("make", ["clean"]);
 
-  // --- 2. Everything in containers ------------------------------------------
+  // --- 2. The tests, before anything is running -----------------------------
+  console.log("");
+  console.log(cyan(`  ${bold("The domain suite, with nothing running")}`));
+  console.log(
+    "  packages/core has no I/O and no framework - no database, no object store,",
+  );
+  console.log(
+    "  no browser. It is the rules about what makes a signature valid, and it is",
+  );
+  console.log("  provable on its own. Docker is not even up yet.");
+  console.log("");
+  await run("make", ["test-unit"]);
+  await waitForPresenter("  ");
+
+  // --- 3. Everything in containers ------------------------------------------
   // NATIVE=1 falls back to a dev server on the host, which is faster to
   // iterate on but is not the thing being demonstrated.
   if (process.env["NATIVE"] === "1") {
@@ -275,7 +297,21 @@ async function main(): Promise<void> {
     }
   }
 
-  // --- 3. The browser the client watches ------------------------------------
+  // --- 4. The adapters, against the real services ---------------------------
+  console.log("");
+  console.log(cyan(`  ${bold("The adapter suite, against the real services")}`));
+  console.log(
+    "  The same contract tests the in-memory fakes pass, run against the Postgres",
+  );
+  console.log(
+    "  and MinIO that just started. That is what makes a fast unit test written",
+  );
+  console.log("  against a fake mean something.");
+  console.log("");
+  await run("make", ["test-integration"]);
+  await waitForPresenter("  ");
+
+  // --- 5. The browser the client watches ------------------------------------
   browser = await chromium.launch({
     headless: false,
     args: ["--window-size=1400,1000", "--window-position=40,40"],
@@ -382,7 +418,7 @@ async function main(): Promise<void> {
   await step(
     page,
     "Poke around",
-    "Opening MinIO and the repo in your own browser. In MinIO: documents bucket, the object, and its Last Modified timestamp - that is the edit, on disk. Login sigdemo / sigdemo123.",
+    "Opening MinIO and the repo in your own browser. In MinIO: documents bucket, the object, its Last Modified timestamp - that is the edit, on disk. Login sigdemo / sigdemo123. In the repo, docs/adr explains why Postgres for the records and MinIO for the bytes.",
     async () => {
       await run("open", [MINIO_URL]).catch(() => {});
       await run("open", [REPO_URL]).catch(() => {});
