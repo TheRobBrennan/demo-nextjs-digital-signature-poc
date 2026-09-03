@@ -127,7 +127,12 @@ make logs / ps   # tail logs / show service status
 make test        # all vitest suites: unit + integration
 make test-unit   # pure core only - no containers needed, ~1s
 make test-integration   # real postgres + minio (needs `make up`)
+make test-e2e    # Playwright, headless (needs `make web`; reseeds first)
 make typecheck   # tsc --noEmit across the workspace
+
+make preflight   # watch the pre-demo checks run in a visible browser
+make demo        # watch the full walkthrough run in a visible browser
+make open        # app + MinIO console in your default browser
 
 make sign        # sign the sample document from the CLI (SIGNER=name)
 make verify      # re-verify every stored signature and the audit chain
@@ -173,10 +178,10 @@ configurable. Nothing personal, no keys, no endpoints hardcoded in source.
 The presenter's version, with talk track, likely questions, and recovery steps,
 is in [docs/demo-script.md](docs/demo-script.md).
 
-Five minutes, in this order. Once `apps/web` and the Playwright suite exist,
-`e2e/demo.spec.ts` will perform exactly these steps, so the script cannot
-silently rot away from the app. Until then, steps 1-5 are runnable today from
-the command line - see "The whole thesis, from a cold start" above.
+Five minutes, in this order. `e2e/tests/02-demo.spec.ts` performs exactly these
+steps, so the script cannot silently rot away from the app - `make demo` runs it
+headed and slowed as a rehearsal, and `make test-e2e` runs it headless as a
+smoke test.
 
 1. **Open a document.** A sample agreement is seeded on `make up`. The header
    shows its SHA-256.
@@ -253,11 +258,16 @@ See `CLAUDE.md` for conventions and the git workflow.
 - `infra/docker-compose.yml` and the `make` targets above. Cold start from
   wiped volumes to a seeded, signable document: about three seconds.
 
-67 tests pass and `tsc --noEmit` is clean across the workspace.
+`tsc --noEmit` is clean across the workspace.
 
-**Not built yet:** `apps/web` (the UI, the canvas, the badge) and the Playwright
-suite. The demo script above is currently a command-line walkthrough; the
-browser half is still to come.
+- `apps/web` - the canvas, the badges, the audit view, on Next 16.
+- `e2e` - Playwright: 5 pre-flight checks and the demo walkthrough, driving the
+  canvas with real mouse input. 7 tests.
+
+79 tests in total.
+
+**Not built yet:** the web service is not containerized - `make web` runs it
+natively against the compose stack.
 
 ## License
 

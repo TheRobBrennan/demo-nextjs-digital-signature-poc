@@ -22,7 +22,25 @@ Then, in a second terminal, because it runs in the foreground:
 make web
 ```
 
-Check all three before you need them:
+Then run the checks and watch them happen:
+
+```bash
+make preflight     # headed Playwright, ~12s, you see each check run
+```
+
+Five assertions, in a visible browser window: the app is up and serving the
+seeded document, the fee still reads **$10,000** (a `$90,000` here means the
+stack is dirty from a rehearsal - `make clean && make up`), nothing is signed
+yet, the audit chain is intact, the signing controls are ready with **Sign
+document** correctly disabled, and the MinIO console is reachable.
+
+If it passes, you are ready. If it fails, it names which check failed.
+
+Then open the real tabs - your own browser, not Playwright's:
+
+```bash
+make open          # app + MinIO console in your default browser
+```
 
 | What | Where | Expect |
 |---|---|---|
@@ -199,6 +217,13 @@ Postgres is the usual culprit. `POSTGRES_PORT` in `.env` moves it.
 **Canvas will not draw.** Use the trackpad rather than a mouse if a tablet
 display is mirrored, or fall back to `make sign` in the terminal and talk over
 it.
+
+**Want to watch the whole thing run once more before they arrive?**
+
+```bash
+make demo          # headed Playwright, drives the entire walkthrough
+make clean && make up   # then reset - it leaves the document tampered
+```
 
 **Total loss.** The CLI walkthrough is the whole demo without a browser:
 

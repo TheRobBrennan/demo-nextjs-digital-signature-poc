@@ -99,6 +99,11 @@ make test-unit   # pure core, no containers, ~1s - the fast loop
 make test-integration   # real postgres + minio, needs `make up`
 make typecheck
 
+make preflight   # headed Playwright: the pre-demo checks, watchable
+make demo        # headed Playwright: the full walkthrough, watchable
+make open        # app + MinIO console in the user's DEFAULT browser
+make test-e2e    # Playwright headless; reseeds the stack first
+
 make sign        # sign the sample document from the CLI
 make verify      # re-verify everything; exits non-zero on any failure
 make tamper      # rewrite the stored document, to demo detection
@@ -156,8 +161,21 @@ Only reach for `make up` when touching adapters, routes, or UI.
   logic actually lives.
 - **The tamper-detection path is the thesis of the demo.** It is tested at all
   three levels deliberately. Don't consolidate those tests as duplication.
-- **`e2e/demo.spec.ts` is the demo script.** If the demo walkthrough in
-  `README.md` changes, change that test in the same commit, and vice versa -
+- **Playwright browsers are a dev dependency, not a prerequisite.** `pnpm
+  install` plus `pnpm --filter @sig/e2e exec playwright install chromium`
+  fetches Chromium into the user's cache. Nothing is installed system-wide and
+  the two-prerequisite rule still holds, but say so rather than letting a
+  ~95MB download surprise someone.
+- **`make open` uses the user's default browser** (`open <url>`), deliberately.
+  Playwright's headed browser is for watching checks run; the actual demo
+  happens in the user's own browser with their own profile. Do not conflate the
+  two.
+- **E2E spec filenames carry their run order** (`01-preflight`, `02-demo`).
+  Preflight asserts a clean seeded stack; demo signs and tampers. Alphabetical
+  ordering is what keeps them from fighting, so do not rename them casually.
+- **`e2e/tests/02-demo.spec.ts` is the demo script.** If the walkthrough in
+  `README.md` or `docs/demo-script.md` changes, change that test in the same
+  commit, and vice versa -
   they are two views of one thing, and CI is what keeps them honest.
 - **Architecture decisions with real trade-offs get an ADR** in `docs/adr/`,
   numbered sequentially. Write it when the decision is made, not afterward, and
