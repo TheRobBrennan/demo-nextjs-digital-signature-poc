@@ -192,6 +192,10 @@ Only reach for `make up` when touching adapters, routes, or UI.
 - **The guided demo runs the containerized app**, not a dev server. `NATIVE=1`
   switches back for fast iteration. If you change what `make up-full` does,
   re-run `pnpm demo:auto` before claiming the demo still works.
+- **A new workspace package needs a `tsconfig.json` before its `typecheck`
+  script means anything.** Without one, `tsc --noEmit` prints its usage text
+  and exits non-zero, which is how `e2e` shipped a typecheck that had never
+  checked anything. Run `pnpm typecheck` at the root after adding a package.
 - **Prefer deleting over disabling.** No skipped tests, no commented-out
   blocks left behind. This is a spike someone will read closely.
 - **No em dashes** in code comments, docs, commits, or PR bodies - use a
