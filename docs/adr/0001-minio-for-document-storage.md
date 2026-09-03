@@ -77,6 +77,14 @@ Node 24, and that stays true.
 
 ## Notes
 
+The configured region is `us-west-2` (Oregon). MinIO ignores it entirely, so
+locally it is inert - it is set to the region this would deploy into, near the
+stakeholders in San Francisco, so that the config describes the real target
+rather than a placeholder someone has to remember to change. `us-west-1`
+(N. California) is closer on a map but is a small legacy region with fewer
+availability zones, higher prices, and late access to new services. Both are
+HIPAA-eligible.
+
 Credentials are the MinIO defaults, set in `.env` and never in source. They are
 demo credentials for a container bound to localhost - do not reuse them
 anywhere that matters.

@@ -38,7 +38,8 @@ export function postgresConfigFromEnv(): PostgresConfig {
 export function s3ConfigFromEnv(): S3Config {
   return {
     endpoint: required("S3_ENDPOINT"),
-    region: optional("S3_REGION", "us-east-1"),
+    // Deployment target is us-west-2 (Oregon); MinIO ignores it locally.
+    region: optional("S3_REGION", "us-west-2"),
     bucket: required("S3_BUCKET"),
     accessKeyId: required("S3_ACCESS_KEY_ID"),
     secretAccessKey: required("S3_SECRET_ACCESS_KEY"),
