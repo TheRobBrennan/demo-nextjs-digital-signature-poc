@@ -1,0 +1,17 @@
+{
+  "name": "demo-nextjs-digital-signature-poc",
+  "version": "0.0.0",
+  "homepage": "https://github.com/TheRobBrennan/demo-nextjs-digital-signature-poc#readme",
+  "bugs": {
+    "url": "https://github.com/TheRobBrennan/demo-nextjs-digital-signature-poc/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TheRobBrennan/demo-nextjs-digital-signature-poc.git"
+  },
+  "license": "MIT",
+  "author": "Rob Brennan <rob@sploosh.ai>",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
